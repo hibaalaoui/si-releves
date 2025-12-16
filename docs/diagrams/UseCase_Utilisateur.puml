@@ -1,0 +1,190 @@
+@startuml UseCase_Utilisateur
+
+title Diagramme de Cas d'Utilisation - Utilisateur (Admin Backoffice)
+
+left to right direction
+
+actor "Utilisateur\n(Admin Backoffice)" as user #lightgreen
+
+rectangle "SI Relevés - Module Utilisateur" {
+  
+  ' ===== Authentification =====
+  package "Authentification" {
+    usecase "Se connecter\nau système" as UC_Login
+    usecase "Se déconnecter" as UC_Logout
+    usecase "Changer son\nmot de passe" as UC_Change_PWD
+  }
+  
+  ' ===== Tableaux de bord =====
+  package "Tableaux de bord" {
+    usecase "Consulter tableau\nde bord principal" as UC_Dashboard
+    usecase "Afficher taux de\ncouverture des relevés" as UC_Coverage
+    usecase "Afficher relevés par\njour par agent" as UC_Daily_Stats
+    usecase "Afficher évolution\nconsommation moyenne" as UC_Consumption
+  }
+  
+  ' ===== Gestion des compteurs =====
+  package "Gestion des compteurs" {
+    usecase "Créer un\nnouveau compteur" as UC_Create_Meter
+    usecase "Consulter liste\ndes compteurs" as UC_List_Meters
+    usecase "Consulter détails\nd'un compteur" as UC_View_Meter
+    usecase "Sélectionner adresse\nsans compteur" as UC_Select_Address
+    usecase "Générer identifiant\ncompteur" as UC_Gen_ID
+    usecase "Valider contraintes\ncompteur/adresse" as UC_Validate_Meter
+  }
+  
+  ' ===== Gestion des agents =====
+  package "Gestion des agents de terrain" {
+    usecase "Consulter liste\ndes agents" as UC_List_Agents
+    usecase "Consulter détails\nd'un agent" as UC_View_Agent
+    usecase "Affecter un agent\nà un quartier" as UC_Assign_Agent
+    usecase "Modifier affectation\nquartier d'un agent" as UC_Modify_Assignment
+    usecase "Afficher performances\nd'un agent" as UC_Agent_Perf
+    usecase "Filtrer agents\npar quartier" as UC_Filter_Agents
+  }
+  
+  ' ===== Gestion des relevés =====
+  package "Gestion des relevés" {
+    usecase "Consulter liste\ndes relevés" as UC_List_Readings
+    usecase "Consulter détails\nd'un relevé" as UC_View_Reading
+    usecase "Filtrer et trier\nles relevés" as UC_Filter_Readings
+    usecase "Calculer automatiquement\nla consommation" as UC_Calc_Consumption
+  }
+  
+  ' ===== Rapports et exports =====
+  package "Rapports et exports" {
+    usecase "Générer rapport mensuel\ndes relevés (PDF)" as UC_Report_Monthly
+    usecase "Générer rapport évolution\nconsommation (PDF)" as UC_Report_Consumption
+    usecase "Envoyer données\nà la facturation" as UC_Send_Billing
+  }
+}
+
+' ===== Relations principales =====
+' Authentification
+user --> UC_Login
+user --> UC_Logout
+user --> UC_Change_PWD
+
+' Tableaux de bord
+user --> UC_Dashboard
+UC_Dashboard ..> UC_Coverage : <<include>>
+UC_Dashboard ..> UC_Daily_Stats : <<include>>
+UC_Dashboard ..> UC_Consumption : <<include>>
+
+' Gestion compteurs
+user --> UC_Create_Meter
+user --> UC_List_Meters
+user --> UC_View_Meter
+UC_Create_Meter ..> UC_Select_Address : <<include>>
+UC_Create_Meter ..> UC_Validate_Meter : <<include>>
+UC_Create_Meter ..> UC_Gen_ID : <<include>>
+
+' Gestion agents
+user --> UC_List_Agents
+user --> UC_View_Agent
+user --> UC_Assign_Agent
+user --> UC_Modify_Assignment
+UC_View_Agent ..> UC_Agent_Perf : <<include>>
+UC_List_Agents ..> UC_Filter_Agents : <<extend>>
+
+' Gestion relevés
+user --> UC_List_Readings
+user --> UC_View_Reading
+UC_List_Readings ..> UC_Filter_Readings : <<extend>>
+UC_View_Reading ..> UC_Calc_Consumption : <<include>>
+
+' Rapports
+user --> UC_Report_Monthly
+user --> UC_Report_Consumption
+user --> UC_Send_Billing
+
+' ===== Notes explicatives =====
+note right of UC_Dashboard
+  **KPIs affichés :**
+  1. Taux de couverture
+     (Compteurs relevés / Total) × 100
+  2. Relevés par jour par agent
+     (Moyenne avec comparaison)
+  3. Évolution consommation moyenne
+     (Eau m³, Électricité kWh)
+     Année N vs N-1
+end note
+
+note right of UC_Create_Meter
+  **Contraintes :**
+  - ID auto-généré (9 chiffres)
+  - Max 2 compteurs/adresse
+  - Max 4 pour immeubles
+  - Index initial = 0
+  - Types : Eau | Électricité
+  
+  **Popup de sélection :**
+  - Adresses sans compteur
+  - Filtrage par quartier
+  - Recherche d'adresse
+end note
+
+note bottom of UC_Assign_Agent
+  **Règles métier :**
+  - Plusieurs agents / même quartier
+  - Ratio optimal : 1 agent / 300 adresses
+  - Performance moyenne : 50 compteurs/jour
+end note
+
+note bottom of UC_Calc_Consumption
+  **Formule :**
+  Consommation = Nouvel index - Ancien index
+  
+  **Unités :**
+  - Eau : m³ (mètres cubes)
+  - Électricité : kWh (kilowattheures)
+end note
+
+note right of UC_Report_Monthly
+  **Contenu PDF :**
+  - Répartition agents par quartier
+  - Nb moyen relevés/agent/jour/quartier
+  - Nb relevés par quartier
+  
+  **Objectif :**
+  Aide à la répartition optimale des agents
+end note
+
+note right of UC_Report_Consumption
+  **Contenu PDF :**
+  - Évolution mensuelle (eau/électricité)
+  - Graphique tendanciel
+  - Comparaison année N vs N-1
+  
+  **Objectif :**
+  Étude des tendances de consommation
+end note
+
+note bottom of UC_Send_Billing
+  **Données envoyées :**
+  - ID client
+  - Adresse
+  - N° compteur
+  - Date relevé
+  - Consommation eau
+  - Consommation électricité
+  
+  **Mode :** Web service automatique
+  après calcul des consommations
+end note
+
+note left of UC_Filter_Readings
+  **Filtres disponibles :**
+  - Par jour
+  - Par quartier
+  - Par agent
+  - Par client
+  - Par type de compteur (Eau/Électricité)
+  
+  **Tri disponible :**
+  - Par jour (défaut, descendant)
+  - Par quartier
+  - Par agent
+end note
+
+@enduml

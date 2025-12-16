@@ -1,0 +1,331 @@
+# SI Relevés - Cursor AI Rules
+
+## Project Context
+This is an academic project for water and electricity meter readings management system (SI Relevés) for RABAT ENERGIE & EAU (REE).
+
+**IMPORTANT:** All project documentation is available in `docs/` directory. READ THESE FILES before generating code:
+- `docs/phase1/Phase1_Analyse_Besoins.md` - Requirements analysis
+- `docs/phase2/Phase2_1_Specifications_Fonctionnelles_UseCases.md` - 33 detailed use cases
+- `docs/phase2/Phase2_2_MCD.md` - Conceptual Data Model (7 entities)
+- `docs/phase2/Phase2_3_MLD.md` - Logical Data Model + SQL schema
+- `docs/phase2/Phase2_4_Cahier_Tests.md` - 157 test cases
+- `docs/phase2/Phase2_5_Architecture_Technique.md` - Technical architecture
+- `docs/phase2/Phase2_5_Complement_Architecture_Logicielle.md` - Architecture justification
+
+**Database schema:** `database/MLD_Create_Database.sql` contains the complete MySQL schema with triggers, procedures, and views.
+
+## Architecture
+- **Backend:** Spring Boot 3.2 + Java 17
+- **Frontend:** React 18 + Vite + Tailwind CSS
+- **Database:** MySQL 8.0
+- **Deployment:** Docker Compose (local)
+- **Authentication:** JWT (30 min expiration)
+- **Architecture Pattern:** Monolithic modular layered architecture
+
+## Code Style Guidelines
+
+### Backend (Spring Boot)
+
+#### Project Structure
+Follow this package organization (by domain/module):
+```
+ma.ree.sireleves/
+├── config/              # Global configuration
+├── security/            # Security (JWT, filters)
+├── exception/           # Global exception handling
+├── common/              # Shared utilities, DTOs
+├── auth/                # Authentication module
+├── user/                # User management module
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── entity/
+│   ├── dto/
+│   └── mapper/
+├── compteur/            # Compteur module
+├── agent/               # Agent module
+├── releve/              # Releve module
+├── dashboard/           # Dashboard module
+└── report/              # Report generation module
+```
+
+#### Coding Standards
+- Use Java 17 features (records, text blocks, switch expressions)
+- Follow layered architecture: **Controller → Service → Repository → Entity**
+- Use Lombok annotations: `@Getter`, `@Setter`, `@NoArgsConstructor`, `@AllArgsConstructor`
+- Use MapStruct for DTO ↔ Entity mapping
+- Use Spring Data JPA for repositories (extend `JpaRepository`)
+- Always use `@Transactional` on service methods that modify data
+- Use `@Valid` for request validation with Bean Validation
+- Use proper HTTP status codes:
+  - 200 OK (GET success)
+  - 201 Created (POST success)
+  - 204 No Content (DELETE success)
+  - 400 Bad Request (validation error)
+  - 404 Not Found (resource not found)
+  - 409 Conflict (business rule violation)
+  - 401 Unauthorized (not authenticated)
+  - 403 Forbidden (not authorized)
+
+#### Exception Handling
+Use `@ControllerAdvice` with `@ExceptionHandler` for centralized error handling.
+Custom exceptions:
+- `ResourceNotFoundException` → 404
+- `BadRequestException` → 400
+- `ConflictException` → 409
+- `UnauthorizedException` → 401
+
+### Frontend (React)
+
+#### Project Structure
+```
+frontend/src/
+├── api/                 # API services (Axios)
+├── components/          # Reusable components
+│   ├── common/         # Button, Input, Modal, Table
+│   ├── layout/         # Header, Sidebar, Layout
+│   └── charts/         # Chart components
+├── pages/               # Page components (routes)
+│   ├── auth/
+│   ├── dashboard/
+│   ├── compteurs/
+│   ├── agents/
+│   └── releves/
+├── hooks/               # Custom React hooks
+├── store/               # Zustand stores
+├── utils/               # Utilities, constants
+├── routes/              # Route configuration
+├── App.jsx
+└── main.jsx
+```
+
+#### Coding Standards
+- Use **functional components** with hooks (no class components)
+- Use **Zustand** for global state management (auth, UI state)
+- Use **React Query** (`@tanstack/react-query`) for server state, caching, and mutations
+- Use **React Hook Form** + **Yup** for form validation
+- Use **Tailwind CSS** for styling (NO custom CSS files, only utility classes)
+- Use **Axios** for API calls with interceptors for JWT injection
+- Always handle **loading** and **error** states in components
+- Component naming: PascalCase (e.g., `UserList.jsx`, `CompteurForm.jsx`)
+- Extract reusable logic into custom hooks (e.g., `useAuth.js`, `useDebounce.js`)
+
+#### API Communication
+- Create service files in `api/` (e.g., `userService.js`, `compteurService.js`)
+- Configure Axios instance with:
+  - Base URL from environment variable
+  - JWT token injection via interceptor
+  - Error handling interceptor (401 → redirect to login)
+
+### Database (MySQL)
+
+#### Naming Conventions
+- **Tables:** lowercase with underscores (e.g., `utilisateur_backoffice`, `compteur`, `releve`)
+- **Columns:** lowercase with underscores (e.g., `id_utilisateur`, `date_ajout`, `index_actuel`)
+- **Primary keys:** `id_<table_name>` (e.g., `id_compteur`, `id_releve`)
+- **Foreign keys:** same name as referenced primary key
+
+#### Constraints
+- Always use foreign keys with `ON DELETE RESTRICT` and `ON UPDATE CASCADE`
+- Use `CHECK` constraints for business rules
+- Use `UNIQUE` constraints where needed (e.g., email, unique compteur per adresse/type)
+- Use `DEFAULT` values appropriately
+
+#### Database Schema
+Refer to `database/MLD_Create_Database.sql` for complete schema including:
+- 7 tables: `utilisateur_backoffice`, `client`, `quartier`, `adresse`, `agent`, `compteur`, `releve`
+- 4 triggers: compteur validation, releve auto-calculation
+- 3 stored procedures: ID generation, KPI calculations
+- 3 views: releve details, agent stats, compteurs sans releve
+
+## Naming Conventions
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Java classes | PascalCase | `UserController`, `CompteurService` |
+| Java methods | camelCase | `createUser()`, `findById()` |
+| Java variables | camelCase | `userId`, `compteurList` |
+| Database tables | snake_case | `utilisateur_backoffice`, `compteur` |
+| Database columns | snake_case | `id_utilisateur`, `date_ajout` |
+| React components | PascalCase | `UserList`, `CompteurForm` |
+| React files | PascalCase.jsx | `UserList.jsx`, `Dashboard.jsx` |
+| API endpoints | kebab-case | `/api/users`, `/api/compteurs` |
+
+## Business Rules (CRITICAL - Must be enforced)
+
+### 1. Users (Utilisateurs Backoffice)
+- **Nom:** MUST be in UPPERCASE only
+- **Prenom:** MUST be in Proper Case (first letter uppercase, rest lowercase)
+- **Email:** MUST be unique across all users
+- **Password:** MUST be BCrypt hashed (never store plain text)
+- **Roles:** Only two values: `Superadmin` or `Utilisateur`
+- **Default role:** `Utilisateur`
+- **Password generation:** Auto-generate 8-character password on creation
+- **First login:** User MUST change password on first login
+
+### 2. Compteurs
+- **ID format:** Exactly 9 digits with leading zeros (e.g., `000000001`, `000000042`)
+- **ID generation:** Auto-increment from last ID, pad with zeros
+- **Max compteurs per address:**
+  - Standard address: MAX 2 compteurs (1 Eau + 1 Électricité)
+  - Immeuble: MAX 4 compteurs (2 standard + 2 espaces communs)
+- **Espaces communs:** ONLY allowed for immeubles (type_bien = 'Immeuble')
+- **Index initial:** Always 0.00 on creation
+- **Types:** Only `Eau` or `Electricite` (ENUM)
+- **Unique constraint:** (id_adresse, type, pour_espaces_communs) MUST be unique
+
+### 3. Relevés
+- **Consommation calculation:** `consommation = nouvel_index - ancien_index`
+- **Units:**
+  - Eau → `m3`
+  - Electricite → `kWh`
+- **Validation:** `nouvel_index` MUST be >= `ancien_index`
+- **Auto-update:** When releve is created, update `compteur.index_actuel` and `compteur.date_derniere_releve`
+- **Ancien index:** Auto-retrieve from `compteur.index_actuel` if not provided
+
+### 4. Authentication & Security
+- **JWT tokens:** Expire after exactly 30 minutes
+- **Auto logout (frontend):** After 10 minutes of user inactivity
+- **Password requirements:** Minimum 8 characters (validated on change)
+- **All endpoints:** Require authentication EXCEPT `/api/auth/login`
+- **Authorization:**
+  - `/api/users/**` → Only `Superadmin`
+  - All other `/api/**` → `Superadmin` OR `Utilisateur`
+
+### 5. KPI Calculations
+- **Taux de couverture:** `(Nombre compteurs relevés / Total compteurs actifs) × 100`
+- **Relevés par jour par agent:** `Total relevés / Nombre de jours`
+- **Filters:** All stats can be filtered by quartier and date range
+
+## Environment Variables
+
+### Backend (Spring Boot)
+- `SPRING_DATASOURCE_URL` - MySQL connection URL
+- `SPRING_DATASOURCE_USERNAME` - Database user
+- `SPRING_DATASOURCE_PASSWORD` - Database password
+- `JWT_SECRET` - Secret key for JWT signing
+- `JWT_EXPIRATION` - Token expiration time in ms (default: 1800000 = 30min)
+- `SPRING_MAIL_HOST` - SMTP host (MailHog for dev)
+- `SPRING_MAIL_PORT` - SMTP port (1025 for MailHog)
+
+### Frontend (React)
+- `VITE_API_URL` - Backend API base URL (e.g., `http://localhost:8080` or `http://localhost/api`)
+
+## Testing Guidelines
+
+### Test Naming Convention
+Use descriptive names following pattern: `should_<ExpectedBehavior>_When_<Condition>()`
+
+Examples:
+- `should_CreateUser_When_ValidRequest()`
+- `should_ThrowConflictException_When_EmailAlreadyExists()`
+- `should_ReturnCompteurList_When_FilteredByQuartier()`
+
+### Test Categories
+1. **Unit tests:** Test services and utilities in isolation
+2. **Integration tests:** Test repositories with database
+3. **API tests:** Test controllers with MockMvc
+4. **E2E tests:** Test complete user flows (frontend + backend)
+
+Refer to `docs/phase2/Phase2_4_Cahier_Tests.md` for 157 detailed test cases.
+
+## Docker & Deployment
+
+- All configuration is in `docker-compose.yml`
+- Database initialization script: `database/MLD_Create_Database.sql`
+- Backend Dockerfile: Build Spring Boot fat JAR
+- Frontend Dockerfile: Multi-stage build (Node build → Nginx serve)
+- Nginx configuration: `nginx/nginx.conf`
+
+## Git Commit Messages
+
+Use conventional commits format:
+- `feat(module): add feature description`
+- `fix(module): fix bug description`
+- `docs: update documentation`
+- `test(module): add tests`
+- `refactor(module): refactor code`
+- `style: format code`
+- `chore: update dependencies`
+
+Examples:
+- `feat(user): add create user endpoint with email validation`
+- `fix(compteur): enforce max 2 compteurs per standard address`
+- `test(releve): add unit tests for consommation calculation`
+
+## Priority Features (MVP Development Order)
+
+Develop in this order for MVP:
+
+1. **Authentication** (UC-AUTH-01, UC-AUTH-02)
+   - Login endpoint
+   - JWT generation
+   - Protected routes
+   - Logout
+   - Change password on first login
+
+2. **User Management** (UC-SA-01 to UC-SA-08) - **Superadmin only**
+   - Create user
+   - List users
+   - Update user
+   - Reset password
+   - Delete user (soft delete)
+
+3. **Compteur Management** (UC-U-01 to UC-U-04)
+   - Create compteur with ID generation
+   - List compteurs with filters
+   - View compteur details
+   - Update compteur
+   - Address selection popup
+
+4. **Agent Management** (UC-U-05 to UC-U-07)
+   - List agents
+   - View agent details
+   - Affect agent to quartier
+
+5. **Relevé Management** (UC-U-08 to UC-U-10, UC-EXT-03)
+   - List relevés with advanced filters
+   - View relevé details
+   - Receive relevé from mobile app (API endpoint)
+
+6. **Dashboard & KPIs** (UC-U-11 to UC-U-15)
+   - Display KPIs (taux de couverture, moyennes)
+   - Charts and statistics
+   - Filters by date range and quartier
+
+7. **Reports** (UC-U-16 to UC-U-18)
+   - Generate monthly PDF report
+   - Generate agent performance report
+
+## When Generating Code
+
+### Before writing ANY code:
+1. ✅ READ the relevant documentation in `docs/phase2/`
+2. ✅ CHECK the database schema in `database/MLD_Create_Database.sql`
+3. ✅ VERIFY business rules listed above
+4. ✅ FOLLOW the package structure defined in Phase2_5
+
+### Always include:
+- ✅ Proper error handling with try-catch
+- ✅ Input validation with `@Valid` and custom validators
+- ✅ Meaningful variable and method names
+- ✅ Comments for complex business logic
+- ✅ Logging with SLF4J for important operations
+- ✅ Unit tests for new services/utilities
+
+### Never:
+- ❌ Hardcode configuration values (use environment variables)
+- ❌ Store passwords in plain text
+- ❌ Ignore validation errors
+- ❌ Use raw SQL in repositories (use JPA/JPQL)
+- ❌ Create duplicate code (DRY principle)
+
+## Additional Resources
+
+- **PlantUML diagrams:** `docs/diagrams/` - Use Cases and MCD
+- **Architecture diagram:** `docs/diagrams/architecture_diagram.png` - Docker Compose architecture
+- **Swagger documentation:** Will be available at `http://localhost:8080/swagger-ui.html` when backend is running
+
+---
+
+**This project is AI-generated and AI-assisted. All documentation, architecture, and initial code generation uses Claude (Anthropic) AI.**
