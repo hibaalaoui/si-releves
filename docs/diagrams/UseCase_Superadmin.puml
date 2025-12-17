@@ -1,0 +1,92 @@
+@startuml UseCase_Superadmin
+
+title Diagramme de Cas d'Utilisation - Superadmin
+
+left to right direction
+
+actor "Superadmin" as superadmin #lightblue
+
+rectangle "SI Relevés - Module Superadmin" {
+  
+  ' Authentification
+  usecase "Se connecter\nau système" as UC_Login
+  usecase "Se déconnecter" as UC_Logout
+  usecase "Changer son propre\nmot de passe" as UC_Change_PWD
+  
+  ' Gestion des utilisateurs
+  usecase "Créer un\nnouveau utilisateur" as UC_Create_User
+  usecase "Consulter liste\ndes utilisateurs" as UC_List_Users
+  usecase "Consulter détails\nd'un utilisateur" as UC_View_User
+  usecase "Modifier les\ninformations utilisateur" as UC_Edit_User
+  usecase "Réinitialiser le\nmot de passe utilisateur" as UC_Reset_PWD
+  
+  ' Cas d'utilisation techniques
+  usecase "Générer mot de passe\naléatoire" as UC_Gen_PWD
+  usecase "Envoyer email\navec mot de passe" as UC_Send_Email
+  usecase "Valider format\ndes données" as UC_Validate
+  usecase "Filtrer utilisateurs\npar rôle" as UC_Filter
+  usecase "Trier utilisateurs" as UC_Sort
+}
+
+' Relations principales
+superadmin --> UC_Login
+superadmin --> UC_Logout
+superadmin --> UC_Change_PWD
+superadmin --> UC_Create_User
+superadmin --> UC_List_Users
+superadmin --> UC_View_User
+superadmin --> UC_Edit_User
+superadmin --> UC_Reset_PWD
+
+' Relations includes
+UC_Create_User ..> UC_Validate : <<include>>
+UC_Create_User ..> UC_Gen_PWD : <<include>>
+UC_Create_User ..> UC_Send_Email : <<include>>
+UC_Edit_User ..> UC_Validate : <<include>>
+UC_Reset_PWD ..> UC_Gen_PWD : <<include>>
+UC_Reset_PWD ..> UC_Send_Email : <<include>>
+UC_List_Users ..> UC_Filter : <<extend>>
+UC_List_Users ..> UC_Sort : <<extend>>
+
+' Notes explicatives
+note right of UC_Create_User
+  **Informations saisies :**
+  - Nom de famille (MAJUSCULES)
+  - Prénom (Nom Propre)
+  - Email
+  - Rôle (Superadmin ou Utilisateur)
+  
+  **Process automatique :**
+  - Génération mot de passe (8 car. min)
+  - Envoi par email (MailCatcher/MailHog)
+  - Force changement à 1ère connexion
+end note
+
+note right of UC_Reset_PWD
+  **Process :**
+  1. Génération nouveau mot de passe
+  2. Envoi par email
+  3. Flag "première connexion" activé
+  4. Utilisateur doit changer son
+     mot de passe à la prochaine connexion
+end note
+
+note bottom of UC_List_Users
+  **Affichage :**
+  - Nom et prénom
+  - Rôle
+  - Date d'ajout
+  - Dernière modification
+  
+  **Filtres :** Par rôle
+  **Tri :** Par nom (défaut, asc) ou rôle
+end note
+
+note left of UC_Login
+  **Authentification :**
+  - Login/mot de passe
+  - Token JWT (30 min)
+  - Déconnexion auto après 10 min d'inactivité
+end note
+
+@enduml

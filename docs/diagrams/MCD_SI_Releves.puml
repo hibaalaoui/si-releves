@@ -1,0 +1,181 @@
+@startuml MCD_SI_Releves
+
+title Modèle Conceptuel de Données (MCD) - SI Relevés
+
+' Style
+skinparam linetype ortho
+skinparam class {
+    BackgroundColor LightYellow
+    BorderColor Black
+    ArrowColor Black
+}
+
+' ===== ENTITÉS =====
+
+class UtilisateurBackoffice {
+    **PK** id_utilisateur : INT
+    --
+    nom : VARCHAR(100)
+    prenom : VARCHAR(100)
+    email : VARCHAR(255)
+    password_hash : VARCHAR(255)
+    role : ENUM('Superadmin', 'Utilisateur')
+    premiere_connexion : BOOLEAN
+    date_ajout : DATETIME
+    date_modification : DATETIME
+    actif : BOOLEAN
+}
+
+class Client {
+    **PK** id_client : VARCHAR(50)
+    --
+    nom : VARCHAR(100)
+    prenom : VARCHAR(100)
+    date_creation : DATETIME
+}
+
+class Quartier {
+    **PK** id_quartier : INT
+    --
+    nom_quartier : VARCHAR(100)
+    ville : VARCHAR(100)
+}
+
+class Adresse {
+    **PK** id_adresse : INT
+    --
+    **FK** id_client : VARCHAR(50)
+    **FK** id_quartier : INT
+    adresse_complete : TEXT
+    type_bien : ENUM('Standard', 'Immeuble')
+    code_postal : VARCHAR(10)
+    date_creation : DATETIME
+}
+
+class Agent {
+    **PK** id_agent : VARCHAR(50)
+    --
+    **FK** id_quartier : INT
+    nom : VARCHAR(100)
+    prenom : VARCHAR(100)
+    tel_personnel : VARCHAR(20)
+    tel_professionnel : VARCHAR(20)
+    date_affectation : DATETIME
+    actif : BOOLEAN
+}
+
+class Compteur {
+    **PK** id_compteur : CHAR(9)
+    --
+    **FK** id_adresse : INT
+    type : ENUM('Eau', 'Electricite')
+    index_actuel : DECIMAL(10,2)
+    date_installation : DATE
+    date_derniere_releve : DATETIME
+    pour_espaces_communs : BOOLEAN
+    actif : BOOLEAN
+}
+
+class Releve {
+    **PK** id_releve : INT
+    --
+    **FK** id_compteur : CHAR(9)
+    **FK** id_agent : VARCHAR(50)
+    date_releve : DATETIME
+    ancien_index : DECIMAL(10,2)
+    nouvel_index : DECIMAL(10,2)
+    consommation : DECIMAL(10,2)
+    unite : ENUM('m3', 'kWh')
+    envoye_facturation : BOOLEAN
+    date_envoi_facturation : DATETIME
+}
+
+' ===== RELATIONS =====
+
+Client "1" -- "1..*" Adresse : possède >
+note on link
+    Un client possède 
+    une ou plusieurs adresses
+end note
+
+Quartier "1" -- "0..*" Adresse : contient >
+note on link
+    Un quartier contient
+    plusieurs adresses
+end note
+
+Adresse "1" -- "1..4" Compteur : contient >
+note on link
+    Une adresse contient
+    1 à 4 compteurs
+    (2 standards + 2 espaces communs)
+end note
+
+Quartier "1" -- "0..*" Agent : est affecté <
+note on link
+    Un quartier peut avoir
+    plusieurs agents affectés
+end note
+
+Compteur "1" -- "0..*" Releve : génère >
+note on link
+    Un compteur génère
+    plusieurs relevés
+end note
+
+Agent "1" -- "0..*" Releve : effectue >
+note on link
+    Un agent effectue
+    plusieurs relevés
+end note
+
+' ===== NOTES EXPLICATIVES =====
+
+note right of UtilisateurBackoffice
+    **Règles métier :**
+    - nom en MAJUSCULES
+    - prenom en Nom Propre
+    - password_hash : bcrypt
+    - premiere_connexion = TRUE
+      à la création
+    - role : Superadmin ou Utilisateur
+end note
+
+note right of Compteur
+    **Règles métier :**
+    - id_compteur : 9 chiffres
+      ex: "000000001"
+    - index_actuel initialisé à 0
+    - Maximum 2 compteurs standards
+      par adresse (Eau + Électricité)
+    - Maximum 2 compteurs supplémentaires
+      pour espaces communs (immeubles)
+end note
+
+note bottom of Releve
+    **Règles métier :**
+    - consommation = nouvel_index - ancien_index
+    - unite : "m3" pour Eau, "kWh" pour Électricité
+    - envoye_facturation = FALSE par défaut
+    - date_releve stocke jour + heure
+end note
+
+note left of Agent
+    **Règles métier :**
+    - Un agent affecté à un seul quartier
+    - Plusieurs agents peuvent être
+      affectés au même quartier
+    - Ratio optimal : 1 agent / 300 adresses
+    - Performance moyenne : 50 compteurs/jour
+end note
+
+note top of Adresse
+    **Règles métier :**
+    - type_bien : "Standard" ou "Immeuble"
+    - Immeubles peuvent avoir jusqu'à
+      4 compteurs (2 + 2 espaces communs)
+    - Une adresse ne change jamais
+      (pas de modification)
+end note
+
+@enduml

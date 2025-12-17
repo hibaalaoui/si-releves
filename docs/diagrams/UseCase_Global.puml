@@ -1,0 +1,140 @@
+@startuml UseCase_Global_SI_Releves
+
+title Diagramme de Cas d'Utilisation - SI Relevés (Vue Globale)
+
+' Définition des acteurs
+actor "Superadmin" as superadmin #lightblue
+actor "Utilisateur\n(Admin Backoffice)" as user #lightgreen
+actor "Agent de Terrain" as agent #yellow
+actor "SI Commercial\n(ERP)" as erp_commercial #orange
+actor "SI RH\n(ERP)" as erp_rh #orange
+actor "SI Facturation\n(ERP)" as erp_facturation #orange
+
+' Rectangle du système
+rectangle "SI Relevés (Backoffice Web)" {
+  
+  ' ===== Cas d'utilisation Superadmin =====
+  package "Gestion des utilisateurs" #lightblue {
+    usecase "Créer un utilisateur" as UC_SA_02
+    usecase "Consulter liste\ndes utilisateurs" as UC_SA_03
+    usecase "Consulter détails\nd'un utilisateur" as UC_SA_04
+    usecase "Modifier un utilisateur" as UC_SA_05
+    usecase "Réinitialiser\nmot de passe" as UC_SA_06
+  }
+  
+  ' ===== Cas d'utilisation Utilisateur =====
+  package "Gestion des compteurs" #lightgreen {
+    usecase "Créer un compteur" as UC_U_03
+    usecase "Consulter liste\ndes compteurs" as UC_U_04
+    usecase "Consulter détails\nd'un compteur" as UC_U_05
+  }
+  
+  package "Gestion des agents" #lightgreen {
+    usecase "Affecter un agent\nà un quartier" as UC_U_06
+    usecase "Consulter liste\ndes agents" as UC_U_07
+    usecase "Consulter détails\nd'un agent" as UC_U_08
+    usecase "Modifier affectation\nd'un agent" as UC_U_09
+  }
+  
+  package "Gestion des relevés" #lightgreen {
+    usecase "Consulter liste\ndes relevés" as UC_U_10
+    usecase "Consulter détails\nd'un relevé" as UC_U_11
+    usecase "Recevoir les relevés\nde l'app mobile" as UC_U_Receive
+    usecase "Calculer la\nconsommation" as UC_U_Calc
+  }
+  
+  package "Tableaux de bord et rapports" #lightgreen {
+    usecase "Consulter tableau\nde bord (KPIs)" as UC_U_02
+    usecase "Générer rapport\nmensuel des relevés" as UC_U_12
+    usecase "Générer rapport\névolution consommation" as UC_U_13
+  }
+  
+  package "Intégrations externes" #lightgreen {
+    usecase "Envoyer données\nà la facturation" as UC_U_14
+  }
+  
+  ' ===== Cas d'utilisation communs =====
+  package "Authentification" #white {
+    usecase "Se connecter" as UC_Login
+    usecase "Se déconnecter" as UC_Logout
+    usecase "Changer son\nmot de passe" as UC_Change_PWD
+  }
+  
+  ' ===== Intégrations système =====
+  package "Synchronisation données" #orange {
+    usecase "Recevoir données\nclients et adresses" as UC_Receive_Clients
+    usecase "Recevoir données\nagents de terrain" as UC_Receive_Agents
+    usecase "Fournir liste\nadresses à relever" as UC_Provide_Addresses
+  }
+}
+
+' ===== Relations Superadmin =====
+superadmin --> UC_Login
+superadmin --> UC_Logout
+superadmin --> UC_Change_PWD
+superadmin --> UC_SA_02
+superadmin --> UC_SA_03
+superadmin --> UC_SA_04
+superadmin --> UC_SA_05
+superadmin --> UC_SA_06
+
+' ===== Relations Utilisateur =====
+user --> UC_Login
+user --> UC_Logout
+user --> UC_Change_PWD
+user --> UC_U_02
+user --> UC_U_03
+user --> UC_U_04
+user --> UC_U_05
+user --> UC_U_06
+user --> UC_U_07
+user --> UC_U_08
+user --> UC_U_09
+user --> UC_U_10
+user --> UC_U_11
+user --> UC_U_12
+user --> UC_U_13
+user --> UC_U_14
+
+' ===== Relations Agent de Terrain (via App Mobile) =====
+agent --> UC_U_Receive : envoie relevés
+agent --> UC_Provide_Addresses : demande adresses
+
+' ===== Relations systèmes externes =====
+erp_commercial --> UC_Receive_Clients : batch planifié
+erp_rh --> UC_Receive_Agents : batch planifié
+UC_U_14 --> erp_facturation : web service
+
+' ===== Relations includes et extends =====
+UC_U_Receive ..> UC_U_Calc : <<include>>
+UC_U_Calc ..> UC_U_14 : <<include>>
+
+note right of UC_SA_02
+  - Génération automatique du mot de passe
+  - Envoi par email
+  - Formats : NOM en MAJUSCULES, 
+    Prénom en Nom Propre
+end note
+
+note right of UC_U_03
+  - Identifiant auto-généré (9 chiffres)
+  - Max 2 compteurs par adresse
+  - Max 4 pour immeubles
+end note
+
+note right of UC_U_Calc
+  Consommation = 
+  Nouvel index - Ancien index
+end note
+
+note bottom of UC_Receive_Clients
+  Batch récurrent planifié
+  Données : ID client, adresses
+end note
+
+note bottom of UC_Receive_Agents
+  Batch récurrent planifié
+  Données : Nom, prénom, téléphones
+end note
+
+@enduml
