@@ -1,0 +1,254 @@
+{
+  "dashboard": {
+    "title": "SI Relevés - Application Overview",
+    "tags": ["si-releves", "application", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "type": "timeseries",
+        "title": "Frontend CPU Usage",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=\"si-releves-frontend\"}[5m]) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "type": "timeseries",
+        "title": "Frontend Memory Usage",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{name=\"si-releves-frontend\"} / 1024 / 1024",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "MB",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "green"},
+                {"value": 200, "color": "yellow"},
+                {"value": 400, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "type": "timeseries",
+        "title": "Frontend Network Traffic",
+        "targets": [
+          {
+            "expr": "rate(container_network_receive_bytes_total{name=\"si-releves-frontend\"}[5m]) / 1024 / 1024",
+            "legendFormat": "In",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(container_network_transmit_bytes_total{name=\"si-releves-frontend\"}[5m]) / 1024 / 1024",
+            "legendFormat": "Out",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "MB/s"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "type": "stat",
+        "title": "Frontend Status",
+        "targets": [
+          {
+            "expr": "up{job=\"cadvisor\"}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 5,
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 8},
+        "type": "timeseries",
+        "title": "MySQL Active Connections",
+        "targets": [
+          {
+            "expr": "mysql_global_status_threads_connected{job=\"mysql\"}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 8},
+        "type": "timeseries",
+        "title": "MySQL Queries per Second",
+        "targets": [
+          {
+            "expr": "rate(mysql_global_status_queries{job=\"mysql\"}[5m])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "qps"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8},
+        "type": "timeseries",
+        "title": "MySQL Slow Queries",
+        "targets": [
+          {
+            "expr": "rate(mysql_global_status_slow_queries{job=\"mysql\"}[5m])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "qps"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 8},
+        "type": "stat",
+        "title": "MySQL Status",
+        "targets": [
+          {
+            "expr": "up{job=\"mysql\"}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": null, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "type": "timeseries",
+        "title": "CPU Usage by Container",
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total[5m])) by (name) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 10,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+        "type": "timeseries",
+        "title": "Memory Usage by Container",
+        "targets": [
+          {
+            "expr": "sum(container_memory_usage_bytes) by (name) / 1024 / 1024",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "MB"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "type": "timeseries",
+        "title": "Backend Response Time",
+        "targets": [
+          {
+            "expr": "rate(http_server_requests_seconds_sum{job=\"si-releves-backend\"}[5m]) / rate(http_server_requests_seconds_count{job=\"si-releves-backend\"}[5m])",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
+      },
+      {
+        "id": 12,
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "type": "timeseries",
+        "title": "Backend Memory Usage",
+        "targets": [
+          {
+            "expr": "jvm_memory_used_bytes{job=\"si-releves-backend\", area=\"heap\"} / 1024 / 1024",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "MB"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+# Prometheus Configuration for SI Relevés
+global:
+  scrape_interval: 15s      # How frequently to scrape targets
+  evaluation_interval: 15s  # How frequently to evaluate rules
+  scrape_timeout: 10s        # How long until a scrape request times out
+  external_labels:
+    cluster: 'si-releves'
+    environment: 'production'
+
+# Alertmanager configuration (optional - can be added later)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Spring Boot Backend Application
+  - job_name: 'si-releves-backend'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['backend:8080']
+        labels:
+          service: 'backend'
+          application: 'si-releves-backend'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # MySQL Exporter - Database Monitoring
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['mysql-exporter:9104']
+        labels:
+          service: 'mysql'
+          database: 'si_releves'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # cAdvisor - Container Metrics (Frontend + All Containers)
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+        labels:
+          service: 'containers'
+    scrape_interval: 15s
+    scrape_timeout: 10s
