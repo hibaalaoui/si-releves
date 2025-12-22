@@ -32,6 +32,7 @@ public class CompteurMapper {
      * Convertir Entity vers ResponseDTO
      */
     public CompteurResponseDTO toResponseDTO(Compteur entity) {
+        try {
         return new CompteurResponseDTO(
                 entity.getIdCompteur(),
                 entity.getAdresse().getIdAdresse(),
@@ -44,6 +45,12 @@ public class CompteurMapper {
                 entity.getPourEspacesCommuns(),
                 entity.getActif()
         );
+        } catch (Exception e) {
+            // Log l'erreur et retourner un DTO avec des valeurs par défaut
+            System.err.println("Erreur lors du mapping CompteurResponseDTO: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors du mapping des données du compteur", e);
+        }
     }
 
     /**

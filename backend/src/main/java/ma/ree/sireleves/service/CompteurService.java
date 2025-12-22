@@ -117,9 +117,16 @@ public class CompteurService {
      */
     @Transactional(readOnly = true)
     public List<CompteurResponseDTO> getAllCompteurs() {
-        return compteurRepository.findAll().stream()
-                .map(compteurMapper::toResponseDTO)
-                .collect(Collectors.toList());
+        try {
+            // Utiliser findAllWithRelations() pour charger les relations (adresse, quartier)
+            return compteurRepository.findAllWithRelations().stream()
+                    .map(compteurMapper::toResponseDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la récupération des compteurs: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors de la récupération des compteurs", e);
+        }
     }
 
     /**
@@ -127,7 +134,7 @@ public class CompteurService {
      */
     @Transactional(readOnly = true)
     public CompteurDetailDTO getCompteurById(String id) {
-        Compteur compteur = compteurRepository.findById(id)
+        Compteur compteur = compteurRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Compteur", "id", id));
         return compteurMapper.toDetailDTO(compteur);
     }
@@ -137,7 +144,7 @@ public class CompteurService {
      */
     @Transactional(readOnly = true)
     public List<CompteurResponseDTO> getCompteursByAdresse(Integer idAdresse) {
-        return compteurRepository.findByAdresseIdAdresse(idAdresse).stream()
+        return compteurRepository.findByAdresseIdAdresseWithRelations(idAdresse).stream()
                 .map(compteurMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -147,7 +154,7 @@ public class CompteurService {
      */
     @Transactional(readOnly = true)
     public List<CompteurResponseDTO> getCompteursByQuartier(Integer idQuartier) {
-        return compteurRepository.findByQuartier(idQuartier).stream()
+        return compteurRepository.findByQuartierWithRelations(idQuartier).stream()
                 .map(compteurMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }
@@ -157,7 +164,7 @@ public class CompteurService {
      */
     @Transactional(readOnly = true)
     public List<CompteurResponseDTO> getActiveCompteurs() {
-        return compteurRepository.findByActifTrue().stream()
+        return compteurRepository.findByActifTrueWithRelations().stream()
                 .map(compteurMapper::toResponseDTO)
                 .collect(Collectors.toList());
     }

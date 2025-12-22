@@ -1,0 +1,5 @@
+﻿[client]
+user=si_user
+password=si_password
+host=mysql
+port=3306

@@ -8,6 +8,8 @@ import ma.ree.sireleves.entity.UtilisateurBackoffice;
 import ma.ree.sireleves.exception.BusinessException;
 import ma.ree.sireleves.repository.UtilisateurBackofficeRepository;
 import ma.ree.sireleves.util.JwtUtil;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,11 +64,27 @@ public class AuthService {
 
     /**
      * Changer le mot de passe d'un utilisateur
+     * Un utilisateur ne peut changer que son propre mot de passe
      */
     public String changePassword(Integer userId, ChangePasswordRequestDTO changePasswordRequest) {
-        // Rechercher l'utilisateur
-        UtilisateurBackoffice utilisateur = utilisateurRepository.findById(userId)
+        // Récupérer l'utilisateur connecté depuis le contexte de sécurité
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BusinessException("Vous devez être authentifié pour changer votre mot de passe");
+        }
+
+        // Récupérer l'email de l'utilisateur connecté
+        String currentUserEmail = authentication.getName();
+        UtilisateurBackoffice currentUser = utilisateurRepository.findByEmail(currentUserEmail)
                 .orElseThrow(() -> new BusinessException("Utilisateur non trouvé"));
+
+        // Vérifier que l'utilisateur connecté correspond à l'userId fourni
+        if (!currentUser.getIdUtilisateur().equals(userId)) {
+            throw new BusinessException("Vous ne pouvez modifier que votre propre mot de passe");
+        }
+
+        // Rechercher l'utilisateur (déjà récupéré ci-dessus)
+        UtilisateurBackoffice utilisateur = currentUser;
 
         // Vérifier l'ancien mot de passe
         if (!passwordEncoder.matches(changePasswordRequest.getOldPassword(), utilisateur.getPasswordHash())) {

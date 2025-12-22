@@ -8,6 +8,7 @@ import ma.ree.sireleves.dto.CompteurResponseDTO;
 import ma.ree.sireleves.service.CompteurService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,8 +34,10 @@ public class CompteurController {
     /**
      * Récupérer tous les compteurs
      * GET /api/compteurs
+     * Accessible aux Superadmin et Utilisateur
      */
     @GetMapping
+    @PreAuthorize("hasRole('Superadmin') or hasRole('Utilisateur')")
     public ResponseEntity<List<CompteurResponseDTO>> getAllCompteurs(
             @RequestParam(required = false) Integer idAdresse,
             @RequestParam(required = false) Integer idQuartier,

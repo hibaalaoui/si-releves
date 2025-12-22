@@ -1,10 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { utilisateurService } from '../services/utilisateurService';
+import { useAuthStore } from '../store/authStore';
 import { FiPlus, FiEdit, FiRefreshCw, FiSearch } from 'react-icons/fi';
 import CreateUtilisateurModal from '../components/CreateUtilisateurModal';
 
 function UtilisateursPage() {
+  const { user } = useAuthStore();
+  const navigate = useNavigate();
+
+  // Vérifier les permissions au montage du composant
+  useEffect(() => {
+    if (user && user.role !== 'Superadmin') {
+      // Rediriger vers le profil si l'utilisateur n'est pas Superadmin
+      navigate('/profil', { replace: true });
+    }
+  }, [user, navigate]);
+
+  // Si l'utilisateur n'est pas Superadmin, ne rien afficher (la redirection se fera)
+  if (!user || user.role !== 'Superadmin') {
+    return null;
+  }
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
