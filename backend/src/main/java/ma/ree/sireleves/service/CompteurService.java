@@ -120,8 +120,8 @@ public class CompteurService {
         try {
             // Utiliser findAllWithRelations() pour charger les relations (adresse, quartier)
             return compteurRepository.findAllWithRelations().stream()
-                    .map(compteurMapper::toResponseDTO)
-                    .collect(Collectors.toList());
+                .map(compteurMapper::toResponseDTO)
+                .collect(Collectors.toList());
         } catch (Exception e) {
             System.err.println("Erreur lors de la récupération des compteurs: " + e.getMessage());
             e.printStackTrace();

@@ -1,5 +1,7 @@
 {
   "dashboard": {
+    "uid": "si-releves-overview",
+    "id": null,
     "title": "SI Relevés - Application Overview",
     "tags": ["si-releves", "application", "monitoring"],
     "timezone": "browser",

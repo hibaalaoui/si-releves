@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { releveService } from '../services/releveService';
-import { FiPlus, FiRefreshCw, FiSearch, FiDroplet, FiZap, FiCalendar } from 'react-icons/fi';
+import { FiPlus, FiRefreshCw, FiSearch, FiDroplet, FiZap, FiCalendar, FiInbox } from 'react-icons/fi';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import CreateReleveModal from '../components/CreateReleveModal';
+import { Button, Card, Badge, Input, EmptyState } from '../components/ui';
 
 function RelevesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,199 +37,245 @@ function RelevesPage() {
     .filter(r => r.typeCompteur === 'Electricite')
     .reduce((sum, r) => sum + r.consommation, 0);
 
+  // Loading State
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-gray-600">Chargement...</div>
+      <div className="space-y-6">
+        <div>
+          <div className="skeleton h-10 w-64 mb-2" />
+          <div className="skeleton h-5 w-96" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton h-32" />
+          ))}
+        </div>
+        <div className="skeleton h-96" />
       </div>
     );
   }
 
+  // Error State
   if (error) {
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-        Erreur lors du chargement des relevés
+      <Card variant="bordered" className="border-error">
+        <Card.Body>
+          <div className="flex items-center gap-3 text-error">
+            <FiZap className="text-xl" />
+            <div>
+              <h3 className="font-semibold">Erreur lors du chargement</h3>
+              <p className="text-sm">Impossible de charger les relevés. Veuillez réessayer.</p>
+            </div>
       </div>
+        </Card.Body>
+      </Card>
     );
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Gestion des Relevés</h1>
-        <p className="text-gray-600 mt-1">Historique des relevés de consommation</p>
+      <div>
+        <h1 className="text-4xl font-heading font-bold text-gray-900 mb-2">Gestion des Relevés</h1>
+        <p className="text-gray-600">Historique complet des relevés de consommation</p>
       </div>
 
       {/* Barre d'actions */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+      <Card>
+        <Card.Body>
         <div className="flex flex-wrap gap-4 items-center justify-between">
           {/* Recherche */}
           <div className="flex-1 min-w-[300px]">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
+              <Input
+                leftIcon={FiSearch}
                 type="text"
                 placeholder="Rechercher par compteur, agent ou adresse..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
-            </div>
           </div>
 
           {/* Boutons d'action */}
           <div className="flex gap-2">
-            <button
+              <Button
+                variant="ghost"
               onClick={() => refetch()}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              <FiRefreshCw />
+                <FiRefreshCw className="mr-2" />
               Actualiser
-            </button>
-            <button
+              </Button>
+              <Button
+                variant="primary"
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              <FiPlus />
+                <FiPlus className="mr-2" />
               Nouveau relevé
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Total relevés</p>
-              <p className="text-2xl font-bold text-gray-800">{releves.length}</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FiCalendar className="text-blue-600 text-2xl" />
+              </Button>
             </div>
           </div>
-        </div>
+        </Card.Body>
+      </Card>
 
-        <div className="bg-white rounded-lg shadow-md p-4">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card hover>
+          <Card.Body>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Consommation Eau</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {totalConsommationEau.toFixed(2)} m³
+                <p className="text-sm font-medium text-gray-500 mb-1">Total relevés</p>
+                <p className="text-3xl font-bold text-gray-900">{releves.length}</p>
+              </div>
+              <div className="w-12 h-12 bg-primary-blue/10 rounded-xl flex items-center justify-center">
+                <FiCalendar className="text-primary-blue text-2xl" />
+            </div>
+            </div>
+          </Card.Body>
+        </Card>
+
+        <Card hover>
+          <Card.Body>
+          <div className="flex items-center justify-between">
+            <div>
+                <p className="text-sm font-medium text-gray-500 mb-1">Consommation Eau</p>
+                <p className="text-3xl font-bold text-primary-blue">
+                  {totalConsommationEau.toFixed(2)} <span className="text-lg">m³</span>
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FiDroplet className="text-blue-600 text-2xl" />
+              <div className="w-12 h-12 bg-primary-blue/10 rounded-xl flex items-center justify-center">
+                <FiDroplet className="text-primary-blue text-2xl" />
+              </div>
             </div>
-          </div>
-        </div>
+          </Card.Body>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow-md p-4">
+        <Card hover>
+          <Card.Body>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Consommation Élec.</p>
-              <p className="text-2xl font-bold text-yellow-600">
-                {totalConsommationElec.toFixed(2)} kWh
+                <p className="text-sm font-medium text-gray-500 mb-1">Consommation Élec.</p>
+                <p className="text-3xl font-bold text-secondary-amber">
+                  {totalConsommationElec.toFixed(2)} <span className="text-lg">kWh</span>
               </p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <FiZap className="text-yellow-600 text-2xl" />
+              <div className="w-12 h-12 bg-secondary-amber/10 rounded-xl flex items-center justify-center">
+                <FiZap className="text-secondary-amber text-2xl" />
+              </div>
             </div>
-          </div>
-        </div>
+          </Card.Body>
+        </Card>
       </div>
 
       {/* Tableau */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <Card>
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Date
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Compteur
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Agent
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Ancien Index
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Nouvel Index
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 Consommation
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredReleves.map((releve) => (
-              <tr key={releve.idReleve} className="hover:bg-gray-50">
+                <tr key={releve.idReleve} className="hover:bg-gray-50 transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
-                    {format(new Date(releve.dateReleve), 'dd/MM/yyyy HH:mm', { locale: fr })}
+                    <div className="text-sm font-medium text-gray-900">
+                      {format(new Date(releve.dateReleve), 'dd/MM/yyyy', { locale: fr })}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {format(new Date(releve.dateReleve), 'HH:mm', { locale: fr })}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     {releve.typeCompteur === 'Eau' ? (
-                      <FiDroplet className="text-blue-600" />
+                        <FiDroplet className="text-primary-blue" size={18} />
                     ) : (
-                      <FiZap className="text-yellow-600" />
+                        <FiZap className="text-secondary-amber" size={18} />
                     )}
-                    <span className="text-sm font-medium text-gray-900">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
                       {releve.idCompteur}
-                    </span>
+                        </div>
+                        <div className="text-xs text-gray-500 truncate max-w-xs">
+                          {releve.adresseComplete}
+                        </div>
+                      </div>
                   </div>
-                  <div className="text-xs text-gray-500">{releve.adresseComplete}</div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">
-                    {releve.nomAgent} {releve.prenomAgent}
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900">
+                      {releve.prenomAgent} {releve.nomAgent}
                   </div>
                   <div className="text-xs text-gray-500">{releve.nomQuartier}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {releve.ancienIndex} {releve.unite}
+                      {releve.ancienIndex} <span className="text-gray-500">{releve.unite}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">
-                    {releve.nouvelIndex} {releve.unite}
+                    <div className="text-sm font-semibold text-gray-900">
+                      {releve.nouvelIndex} <span className="text-gray-500 font-normal">{releve.unite}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${
-                      releve.typeCompteur === 'Eau'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}
+                    <Badge 
+                      variant={releve.typeCompteur === 'Eau' ? 'info' : 'warning'}
+                      size="md"
                   >
                     {releve.consommation} {releve.unite}
-                  </span>
+                    </Badge>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
 
+        {/* Empty State */}
         {filteredReleves.length === 0 && (
-          <div className="text-center py-12 text-gray-500">
-            Aucun relevé trouvé
-          </div>
+          <EmptyState
+            icon={FiInbox}
+            title="Aucun relevé trouvé"
+            description={searchTerm ? 'Aucun résultat pour votre recherche.' : 'Commencez par ajouter un relevé.'}
+            action={!searchTerm && (
+              <Button
+                variant="primary"
+                onClick={() => setIsCreateModalOpen(true)}
+              >
+                <FiPlus className="mr-2" />
+                Ajouter un relevé
+              </Button>
+            )}
+          />
         )}
-      </div>
+      </Card>
 
-      {/* Stats */}
-      <div className="mt-4 text-sm text-gray-600">
+      {/* Stats Footer */}
+      {filteredReleves.length > 0 && (
+        <div className="text-sm text-gray-600 flex items-center justify-between">
+          <span>
         {filteredReleves.length} relevé(s) affiché(s) sur {releves.length} au total
+          </span>
       </div>
+      )}
 
       {/* Modal de création */}
       <CreateReleveModal

@@ -138,7 +138,7 @@ services:
       - '--storage.tsdb.retention.time=15d'
       - '--web.enable-lifecycle'
     ports:
-      - "${PROMETHEUS_PORT:-9090}:9090"
+      - "${PROMETHEUS_PORT:-19090}:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml:ro
@@ -174,7 +174,7 @@ services:
     command:
       - '--config.my-cnf=/etc/mysqld_exporter/.my.cnf'
     ports:
-      - "9104:9104"
+      - "19104:9104"
     volumes:
       - ./mysql-exporter.my.cnf:/etc/mysqld_exporter/.my.cnf:ro
     networks:

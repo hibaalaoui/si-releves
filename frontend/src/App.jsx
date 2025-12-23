@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastProvider } from './contexts/ToastContext';
 import Layout from './components/Layout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
@@ -12,9 +13,11 @@ import CompteursPage from './pages/CompteursPage';
 import RelevesPage from './pages/RelevesPage';
 import AgentsPage from './pages/AgentsPage';
 import QuartiersPage from './pages/QuartiersPage';
+import DashboardPage from './pages/DashboardPage';
 
 function App() {
   return (
+    <ToastProvider>
     <Router>
       <Routes>
         {/* Routes publiques */}
@@ -39,7 +42,7 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <Navigate to="/quartiers" replace />
+                <DashboardPage />
               </Layout>
             </ProtectedRoute>
           }
@@ -49,9 +52,9 @@ function App() {
           element={
             <ProtectedRoute>
               <RoleProtectedRoute allowedRoles={['Superadmin']}>
-                <Layout>
-                  <UtilisateursPage />
-                </Layout>
+              <Layout>
+                <UtilisateursPage />
+              </Layout>
               </RoleProtectedRoute>
             </ProtectedRoute>
           }
@@ -101,6 +104,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
+    </ToastProvider>
   );
 }
 
